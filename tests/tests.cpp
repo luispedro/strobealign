@@ -8,6 +8,7 @@
 #include "tmpdir.hpp"
 #include "io.hpp"
 #include "revcomp.hpp"
+#include "randstrobes.hpp"
 
 
 TEST_CASE("estimate_read_length") {
@@ -136,3 +137,12 @@ TEST_CASE("reverse complement") {
     CHECK(reverse_complement("ACG") == "CGT");
     CHECK(reverse_complement("AACGT") == "ACGTT");
 }
+
+
+TEST_CASE("randstrobe packing") {
+    CHECK(RefRandstrobe{0, 1235, 322, 99}.hash == 0);
+    CHECK(RefRandstrobe{0, 1235, 322, 99}.strobe1_position() == 1235);
+    CHECK(RefRandstrobe{0, 1235, 322, 99}.reference_index() == 322);
+    CHECK(RefRandstrobe{0, 1235, 322, 99}.strobe2_offset() == 99);
+}
+

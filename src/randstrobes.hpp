@@ -25,41 +25,50 @@ struct RefRandstrobe {
 
     RefRandstrobe(randstrobe_hash_t hash, uint32_t position, uint32_t ref_index, uint32_t strobe2_offset)
         : hash(hash)
-        , m_position(position)
-        , m_packed((ref_index << bit_alloc) + strobe2_offset)
-    { }
+    {
+        m_packed.m_unpacked.m_position = position;
+        m_packed.m_unpacked.m_ref_index = ref_index;
+        m_packed.m_unpacked.m_strobe2_offset = strobe2_offset;
+        static_assert(sizeof(m_packed) == sizeof(uint64_t), "packed size is not 64 bits");
+    }
 
     bool operator< (const RefRandstrobe& other) const {
         // Compare both hash and position to ensure that the order of the
         // RefRandstrobes in the index is reproducible no matter which sorting
         // function is used. This branchless comparison is faster than the
         // equivalent one using std::tie.
-        __uint128_t lhs = (static_cast<__uint128_t>(hash) << 64) | ((static_cast<uint64_t>(m_position) << 32) | m_packed);
-        __uint128_t rhs = (static_cast<__uint128_t>(other.hash) << 64) | ((static_cast<uint64_t>(other.m_position) << 32) | m_packed);
+        __uint128_t lhs = (static_cast<__uint128_t>(hash) << 64) | m_packed.m_packed64;
+        __uint128_t rhs = (static_cast<__uint128_t>(other.hash) << 64) | other.m_packed.m_packed64;
         return lhs < rhs;
     }
 
     int strobe1_position() const {
-        return m_position;
+        return m_packed.m_unpacked.m_position;
     }
 
     int reference_index() const {
-        return m_packed >> bit_alloc;
+        return m_packed.m_unpacked.m_ref_index;
     }
 
     int strobe2_offset() const {
-        return m_packed & mask;
+        return m_packed.m_unpacked.m_strobe2_offset;
     }
 
 
 private:
-    static constexpr int bit_alloc = 8;
-    static constexpr int mask = (1 << bit_alloc) - 1;
-    uint32_t m_position;
-    uint32_t m_packed; // packed representation of ref_index and strobe offset
+    static constexpr int ref_index_bits = 24;
+    union {
+        uint64_t m_packed64;
+        struct {
+            uint32_t m_position;
+            uint32_t m_ref_index : ref_index_bits;
+            uint32_t m_strobe2_offset : (32 - ref_index_bits);
+        } m_unpacked;
+    } m_packed;
 
 public:
-    static constexpr uint32_t max_number_of_references = (1 << (32 - bit_alloc)) - 1;
+    static constexpr uint64_t max_number_of_references = (1 << ref_index_bits) - 1;
+    static constexpr uint64_t max_reference_length = (uint64_t(1) << 32) - 1;
 };
 
 struct QueryRandstrobe {
