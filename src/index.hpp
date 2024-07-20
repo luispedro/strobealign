@@ -74,7 +74,7 @@ struct StrobemerIndex {
 
         auto pos = std::lower_bound(randstrobes.begin() + position_start,
                                                randstrobes.begin() + position_end,
-                                               RefRandstrobe{key, 0, 0},
+                                               RefRandstrobe{key, 0, 0, 0},
                                                cmp);
         if (pos->hash == key) return pos - randstrobes.begin();
         return end();
@@ -93,7 +93,7 @@ struct StrobemerIndex {
     }
 
     unsigned int get_strobe1_position(bucket_index_t position) const {
-        return randstrobes[position].position;
+        return randstrobes[position].strobe1_position();
     }
 
     int strobe2_offset(bucket_index_t position) const {
@@ -141,7 +141,7 @@ struct StrobemerIndex {
 
         auto pos = std::upper_bound(randstrobes.begin() + position,
                                                randstrobes.begin() + position_end,
-                                               RefRandstrobe{key, 0, 0},
+                                               RefRandstrobe{key, 0, 0, 0},
                                                cmp);
         return (pos - randstrobes.begin() - 1) - position + 1;
     }

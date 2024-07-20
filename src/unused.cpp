@@ -41,14 +41,14 @@ public:
         return m_packed & mask;
     }
 
-    RefRandstrobe::packed_t packed() const {
+    uint32_t packed() const {
         return m_packed;
     }
 
 private:
     static const int bit_alloc = 8;
     static const int mask = (1 << bit_alloc) - 1;
-    RefRandstrobe::packed_t m_packed;
+    uint32_t m_packed;
 };
 
 using RefRandstrobeVector = std::vector<RefRandstrobeWithoutHash>;

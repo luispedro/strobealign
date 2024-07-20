@@ -159,7 +159,7 @@ void StrobemerIndex::populate(float f, unsigned n_threads) {
     }
     Timer randstrobes_timer;
     logger.debug() << "  Generating randstrobes ...\n";
-    randstrobes.assign(total_randstrobes, RefRandstrobe{0, 0, 0});
+    randstrobes.assign(total_randstrobes, RefRandstrobe{0, 0, 0, 0});
     assign_all_randstrobes(randstrobe_counts, n_threads);
     stats.elapsed_generating_seeds = randstrobes_timer.duration();
 
@@ -304,9 +304,11 @@ void StrobemerIndex::assign_randstrobes(size_t ref_index, size_t offset) {
             chunk.push_back(randstrobe);
         }
         for (auto randstrobe : chunk) {
-            RefRandstrobe::packed_t packed = ref_index << 8;
-            packed = packed + (randstrobe.strobe2_pos - randstrobe.strobe1_pos);
-            randstrobes[offset++] = RefRandstrobe{randstrobe.hash, randstrobe.strobe1_pos, packed};
+            randstrobes[offset++] = RefRandstrobe{
+                                            randstrobe.hash,
+                                            randstrobe.strobe1_pos,
+                                            static_cast<uint32_t>(ref_index),
+                                            randstrobe.strobe2_pos - randstrobe.strobe1_pos};
         }
         chunk.clear();
     }
@@ -330,10 +332,8 @@ void StrobemerIndex::print_diagnostics(const std::string& logfile_name, int k) c
     std::vector<randstrobe_hash_t> log_count_1000_limit(max_size, 0);  // stores count and each index represents the length
     randstrobe_hash_t tot_seed_count_1000_limit = 0;
 
-    size_t seed_length = 0;
-
     for (size_t it = 0; it < randstrobes.size(); it++) {
-        seed_length = strobe2_offset(it) + k;
+        size_t seed_length = strobe2_offset(it) + k;
         auto count = get_count(it);
 
         if (seed_length < max_size){
