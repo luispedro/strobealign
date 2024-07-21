@@ -216,16 +216,20 @@ int run_strobealign(int argc, char **argv) {
     references = References::from_fasta(opt.ref_filename);
     logger.info() << "Time reading reference: " << read_refs_timer.elapsed() << " s\n";
 
+    if (references.total_length() == 0) {
+        throw InvalidFasta("No reference sequences found");
+    }
     logger.info() << "Reference size: " << references.total_length() / 1E6 << " Mbp ("
         << references.size() << " contig" << (references.size() == 1 ? "" : "s")
         << "; largest: "
         << (*std::max_element(references.lengths.begin(), references.lengths.end()) / 1E6) << " Mbp)\n";
-    if (references.total_length() == 0) {
-        throw InvalidFasta("No reference sequences found");
-    }
 
     if (references.size() > RefRandstrobe::max_number_of_references) {
         throw InvalidFasta("Too many reference sequences. Current maximum is " + std::to_string(RefRandstrobe::max_number_of_references));
+    }
+
+    if (*std::max_element(references.lengths.begin(), references.lengths.end()) > RefRandstrobe::max_reference_length) {
+        throw InvalidFasta("Reference sequence too long. Current maximum is " + std::to_string(RefRandstrobe::max_reference_length));
     }
 
     StrobemerIndex index(references, index_parameters, opt.bits);

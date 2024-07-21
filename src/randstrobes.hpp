@@ -56,19 +56,20 @@ struct RefRandstrobe {
 
 
 private:
-    static constexpr int ref_index_bits = 24;
+    static constexpr int ref_index_bits = 32;
+    static constexpr int position_bits = 24;
     union {
         uint64_t m_packed64;
         struct {
-            uint32_t m_position;
-            uint32_t m_ref_index : ref_index_bits;
-            uint32_t m_strobe2_offset : (32 - ref_index_bits);
+            uint32_t m_ref_index;
+            uint32_t m_position : position_bits;
+            uint32_t m_strobe2_offset : (32 - position_bits);
         } m_unpacked;
     } m_packed;
 
 public:
-    static constexpr uint64_t max_number_of_references = (1 << ref_index_bits) - 1;
-    static constexpr uint64_t max_reference_length = (uint64_t(1) << 32) - 1;
+    static constexpr uint64_t max_number_of_references = (uint64_t(1) << ref_index_bits) - 1;
+    static constexpr uint64_t max_reference_length = (uint64_t(1) << position_bits) - 1;
 };
 
 struct QueryRandstrobe {
